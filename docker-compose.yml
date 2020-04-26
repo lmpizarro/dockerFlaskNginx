@@ -1,0 +1,54 @@
+version: "3.7"
+
+services:
+  web:
+    restart: always
+    build: ./app
+    expose:
+      - "5000"
+    env_file: 
+      - .env
+    depends_on:
+      - redis
+    
+    command: /usr/local/bin/gunicorn -w 2 -b :5000 app:app
+
+
+  nginx:
+    image: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - .:/www/static
+    links:
+      - web:web
+  redis:
+    image: redis
+  celery:
+    build: 
+      context: ./app
+    command: rm worker.pid
+    command: celery -A tasks worker -l info --pidfile=worker.pid
+    depends_on:
+      - redis
+  celery-beat:
+    build:
+      context: ./app
+    command: celery -A tasks beat -l info --pidfile=bworker.pid
+    depends_on:
+      - redis     
+  mongodb_container:
+    image: mongo:latest
+    # environment:
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
+volumes:
+  mongodb_data_container:
+  
