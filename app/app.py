@@ -1,19 +1,10 @@
 from flask import Flask
-from flask_restful import Resource, Api, reqparse, abort
-
-import pymongo
+from flask_restful import Resource, Api, reqparse, abort 
 import datetime
 
 from tasks import long_task
+from config import answer_collection
 
-from pymongo import MongoClient
-
-client = MongoClient('mongodb_container', 27017)
-answer_db = client['answer_db']
-
-answer_collection = answer_db.answer_collection
-
-answer_db.answer_collection.drop()
 
 app = Flask(__name__)
 
@@ -57,13 +48,13 @@ class Answer(Resource):
     def post(self):
         args = parser.parse_args()
         
-        result = long_task.delay(4,4)        
+
 
         
-        resp_id = answer_collection.insert_one({'answer': args['answer'], 
-                                                'result_id': str(result.id),
+        resp_id = answer_collection.insert_one({'answer': args['answer'],
                                                 'date_time': datetime.datetime.now().__str__()}) 
 
+        result = long_task.delay(4,4, str(resp_id.inserted_id))
         # resp['resp_id'] = resp_id
         
         

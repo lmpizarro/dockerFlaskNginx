@@ -12,8 +12,6 @@ services:
       - redis
     
     command: /usr/local/bin/gunicorn -w 2 -b :5000 app:app
-
-
   nginx:
     image: nginx
     restart: always
@@ -48,6 +46,7 @@ services:
       - 27017:27017
     volumes:
       - mongodb_data_container:/data/db
+  
 
 volumes:
   mongodb_data_container:

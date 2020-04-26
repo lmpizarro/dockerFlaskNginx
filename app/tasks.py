@@ -2,6 +2,9 @@ from celery import Celery
 import time
 import logging
 
+from config import answer_collection
+from bson.objectid import ObjectId
+
 app = Celery('tasks', broker='redis://redis:6379',
                       backend='redis://redis:6379')
 
@@ -24,10 +27,14 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @app.task
 def test_periodic(epoch, arg):
-    logging.info('LOGGING {} {}'.format(epoch, arg))
+    logging.info('LOGGING {} {} registers {}'.format(epoch, arg, answer_collection.count_documents({})))
 
 @app.task
-def long_task(x, y):
+def long_task(x, y, resp_id):
 
+    y = ObjectId(resp_id)
+    r = [u for u in answer_collection.find({"_id": y})]
+
+    logging.info('LOGGING Id {} {}'.format(resp_id, r))    
     time.sleep(10)
     return "long_task"
